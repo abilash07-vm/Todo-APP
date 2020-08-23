@@ -110,7 +110,7 @@ public class AddDialog extends DialogFragment {
                 String txtDesc=desc.getText().toString();
                 String txtDate= date.getText().toString();
                 String txtTime=time.getText().toString();
-                if(!(txtTitle.equals("")||txtDesc.equals("") ) && check(txtDate,txtTime)){
+                if(!(txtTitle.equals("")||txtDesc.equals("") || txtDate.equals("Date") || txtTime.equals("Time")) && check(txtDate,txtTime)){
                     db.remainderDao().addRemainder(new Remainder(txtTitle,txtDesc,txtDate,txtTime,to24hr(txtTime)));
                     try{
                         onSubmit= (OnSubmit) getActivity();
