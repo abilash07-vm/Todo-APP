@@ -7,9 +7,11 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.AsyncTask;
@@ -77,7 +79,23 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()){
                     case R.id.about_us:
-                        Toast.makeText(MainActivity.this, "working  "+item, Toast.LENGTH_LONG).show();
+                        AlertDialog.Builder builder=new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("Designed and Developed by Abilash\n For more details vist my website.")
+                                .setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                })
+                                .setPositiveButton("Visit", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent=new Intent(MainActivity.this,WebActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        startActivity(intent);
+                                    }
+                                });
+                        builder.create().show();
                         break;
                     case R.id.completed:
                         setAdapter("completed");
