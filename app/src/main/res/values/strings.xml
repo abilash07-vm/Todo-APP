@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Todo APP</string>
+    <string name="about_us">About us</string>
+    <string name="completed">Completed</string>
+</resources>

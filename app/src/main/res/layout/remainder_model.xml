@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardElevation="5dp"
+    app:cardCornerRadius="5dp"
+    android:id="@+id/cardview">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Title"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:id="@+id/title"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Body"
+            android:id="@+id/body"
+            android:layout_below="@+id/title"
+            android:layout_marginLeft="10dp"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_complete"
+            android:layout_alignParentEnd="true"
+            android:id="@+id/imgCompleted"
+            android:layout_marginBottom="10dp"
+            app:tint="#11F150" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="Delete"
+            android:layout_below="@+id/imgCompleted"
+            android:background="#EA0B0B"
+            android:textColor="#fff"
+            android:id="@+id/btndelete"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Date"
+            android:layout_toStartOf="@+id/time"
+            android:layout_below="@+id/body"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="30dp"
+            android:id="@+id/date"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="time"
+            android:layout_below="@+id/body"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="20dp"
+            android:id="@+id/time"/>
+
+
+
+    </RelativeLayout>
+
+
+
+</com.google.android.material.card.MaterialCardView>
