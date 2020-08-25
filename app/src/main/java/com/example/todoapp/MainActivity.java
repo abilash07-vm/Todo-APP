@@ -1,5 +1,6 @@
 package com.example.todoapp;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NotificationCompat;
@@ -15,6 +16,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.SystemClock;
@@ -45,7 +47,8 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
     public void onDelete(Remainder remainder) {
         db.remainderDao().deleteRemainder(remainder);
         setAdapter("");
-        isBound=false;
+        new getRemainderReached().cancel(true);
+        new getRemainderReached().execute();
     }
 
     @Override
@@ -54,15 +57,15 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
         new getRemainderReached().execute();
     }
 
-    private boolean isBound=false;
     private FloatingActionButton fab;
     private MaterialToolbar toolbar;
     private RecyclerView recyclerView;
-    RemainderDatabase db;
-    ArrayList<Remainder> remainders;
-    RemainderAdaptor adapter=new RemainderAdaptor(this);
+    static RemainderDatabase db;
+    static ArrayList<Remainder> remainders;
+    static RemainderAdaptor adapter;
     private Button btnGoBack;
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
             public void onClick(View v) {
                 AddDialog addDialog=new AddDialog();
                 addDialog.show(getSupportFragmentManager(),"dialog");
-                isBound=false;
+                new getRemainderReached().cancel(true);
 
             }
         });
@@ -136,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
         toolbar=findViewById(R.id.toolbar);
         recyclerView=findViewById(R.id.recyView);
         db=RemainderDatabase.getInstance(this);
+        adapter=new RemainderAdaptor(this);
         btnGoBack=findViewById(R.id.btngoBack);
     }
     @Override
@@ -148,7 +152,6 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            isBound=true;
         }
 
         @Override
@@ -157,13 +160,13 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
             int i=0;
             for (Remainder remainder:remainders) {
                 while (!remainder.isIscomplete()) {
-                    if (!isBound) {
+                    if (isCancelled()) {
                         return null;
                     }
                     if (check(remainder.getDate(), remainder.getT24hrtime())) {
                         db.remainderDao().setCompleted(remainder.getId(), true);
                         remainder.setIscomplete(true);
-                        isBound=false;
+                        new getRemainderReached().cancel(true);
                         publishProgress(remainder);
                     }
                     try {
@@ -176,39 +179,33 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
             return null;
         }
 
+        private boolean check(String txtDate, String txtTime) {
+            Calendar calendar=Calendar.getInstance();
+            Calendar calendar1=Calendar.getInstance();
+
+            txtTime=txtTime.replaceAll(" ",":");
+            String[] temp=txtTime.split(":");
+            int hour=Integer.parseInt(temp[0]),min=Integer.parseInt(temp[1]);
+            String[] fulldate=(txtDate.replaceAll("-",":")).split(":");
+            int year=Integer.parseInt(fulldate[2]),month=Integer.parseInt(fulldate[1]),day=Integer.parseInt(fulldate[0]);
+
+            calendar.set(year,month-1,day,hour,min);
+
+            calendar1.setTime(Calendar.getInstance().getTime());
+            Log.d(TAG, "check: checkFunction "+calendar.getTime()+"\n"+calendar1.getTime()+String.valueOf(calendar.compareTo(calendar1) <= 0));
+            return calendar.compareTo(calendar1) <= 0;
+        }
         @Override
         protected void onProgressUpdate(Remainder... values) {
             super.onProgressUpdate(values);
             new notifyAsyncTask(values[0]).execute();
         }
     }
-    private boolean check(String txtDate, String txtTime) {
-        Calendar calendar=Calendar.getInstance();
-        Calendar calendar1=Calendar.getInstance();
 
-        txtTime=txtTime.replaceAll(" ",":");
-        String[] temp=txtTime.split(":");
-        int hour=Integer.parseInt(temp[0]),min=Integer.parseInt(temp[1]);
-        String[] fulldate=(txtDate.replaceAll("-",":")).split(":");
-        int year=Integer.parseInt(fulldate[2]),month=Integer.parseInt(fulldate[1]),day=Integer.parseInt(fulldate[0]);
-
-        calendar.set(year,month-1,day,hour,min);
-
-        calendar1.setTime(Calendar.getInstance().getTime());
-        Log.d(TAG, "check: checkFunction "+calendar.getTime()+"\n"+calendar1.getTime()+String.valueOf(calendar.compareTo(calendar1) <= 0));
-        return calendar.compareTo(calendar1) <= 0;
-    }
     public class notifyAsyncTask extends AsyncTask<Remainder,Integer,Void>{
         Remainder remainder;
         public notifyAsyncTask(Remainder remainder) {
             this.remainder=remainder;
-        }
-
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-
         }
 
         @Override
@@ -223,6 +220,12 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
         }
 
         @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            Log.d(TAG, "onCancelled: Current task is cancelled");
+        }
+
+        @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             Intent intent=new Intent(MainActivity.this,MainActivity.class);
@@ -232,17 +235,19 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
 
             NotificationCompat.Builder builder=new NotificationCompat.Builder(MainActivity.this,"channel1")
                     .setSmallIcon(R.drawable.ic_bell)
-                    .setContentTitle(remainder.getTitle())
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
+                    .setContentTitle(remainder.getTitle())
                     .setContentIntent(pendingIntent)
                     .setContentText(remainder.getBody());
             NotificationManagerCompat manager=NotificationManagerCompat.from(MainActivity.this);
-            manager.notify(5,builder.build());
+            manager.notify(remainder.getId(),builder.build());
             setAdapter("");
             new getRemainderReached().execute();
         }
+
     }
-    private void setAdapter(String a){
+    public static void setAdapter(String a){
         if( a.equals("completed")){
             remainders= (ArrayList<Remainder>) db.remainderDao().getALlRemaindersByCompleteBySmall(true);
         }else{
@@ -255,7 +260,14 @@ public class MainActivity extends AppCompatActivity implements AddDialog.OnSubmi
     @Override
     protected void onStart() {
         super.onStart();
-        isBound=false;
+        new getRemainderReached().cancel(true);
+        new getRemainderReached().execute();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        new getRemainderReached().cancel(true);
         new getRemainderReached().execute();
     }
 }

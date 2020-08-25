@@ -65,6 +65,7 @@ public class AddDialog extends DialogFragment {
                         year,
                         month,
                         day);
+                dialog.getDatePicker().setMinDate(System.currentTimeMillis());
                 dialog.show();
             }
         });
@@ -120,7 +121,7 @@ public class AddDialog extends DialogFragment {
                     }
                     dismiss();
 
-                }else if(!isafter){
+                }else if(!isafter  && !(txtDate.equals("Date") || txtTime.equals("Time"))){
                     Toast.makeText(getActivity(),"Choose a future date and time",Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(getActivity(),"Please fill all the details",Toast.LENGTH_SHORT).show();
@@ -168,6 +169,7 @@ public class AddDialog extends DialogFragment {
             return true;
         }
     }
+
 
 
     private void initViews(View view) {
